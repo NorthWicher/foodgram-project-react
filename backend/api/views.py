@@ -10,18 +10,19 @@ from reportlab.pdfgen import canvas
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import (SAFE_METHODS, IsAuthenticated,
+from rest_framework.permissions import (SAFE_METHODS,
+                                        IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
+
 from api.paginations import RecipePagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
                              RecipeReadSerializer, RecipeSerializer,
-                             SubscribeSerializer,
-                             TagSerializer)
-from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
-                            ShoppingCart, Tag)
+                             SubscribeSerializer, TagSerializer)
+from recipes.models import (Favorite, Ingredient, IngredientAmount,
+                            Recipe, ShoppingCart, Tag)
 from users.models import Subscribe, User
 
 from .filters import IngredientFilter, RecipeFilter
