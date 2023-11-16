@@ -6,15 +6,13 @@ from django.utils.translation import gettext_lazy as _
 
 class User(AbstractUser):
     """Абстрактная модель пользователя."""
- 
     username_validator = UnicodeUsernameValidator()
-
     username = models.CharField(
         _("username"),
         max_length=150,
         unique=True,
         help_text=_(
-            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_."
         ),
         validators=[username_validator],
         error_messages={

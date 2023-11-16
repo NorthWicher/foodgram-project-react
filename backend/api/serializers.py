@@ -1,8 +1,6 @@
 import base64
 
 import webcolors
-from django.contrib.auth.password_validation import validate_password
-from django.core import exceptions as django_exceptions
 from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
@@ -28,7 +26,12 @@ class UserCreateSerializer(UserCreateSerializer):
     """Создание пользователя с обязательными полями."""
     class Meta:
         model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password')
+        fields = ('email',
+                  'id',
+                  'username',
+                  'first_name',
+                  'last_name',
+                  'password')
 
 
 class UserReadSerializer(UserSerializer):
