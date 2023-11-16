@@ -3,12 +3,12 @@ import base64
 import webcolors
 from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             RecipeIngredient, ShoppingCart, Tag)
-from users.models import Subscribe, User
+from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ValidationError
+from users.models import Subscribe, User
 
 
 class Base64ImageField(serializers.ImageField):
