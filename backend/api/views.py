@@ -10,19 +10,19 @@ from reportlab.pdfgen import canvas
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import (SAFE_METHODS,
-                                        IsAuthenticated,
+from rest_framework.permissions import (SAFE_METHODS, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
-
 from api.paginations import RecipePagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
                              RecipeReadSerializer, RecipeSerializer,
-                             SubscribeSerializer, TagSerializer)
-from recipes.models import (Favorite, Ingredient, IngredientAmount,
-                            Recipe, ShoppingCart, Tag)
+                             SubscribeSerializer,
+                             TagSerializer,
+                             UserReadSerializer)
+from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Subscribe, User
 
 from .filters import IngredientFilter, RecipeFilter
@@ -34,34 +34,56 @@ class CustomUserViewSet(UserViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly, ]
     pagination_class = RecipePagination
 
+    @action(detail=False, methods=['get'],
+            pagination_class=None,
+            permission_classes=(IsAuthenticated,))
+    def me(self, request):
+        serializer = UserReadSerializer(request.user)
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK)
+
     @action(
+        methods=('POST', 'DELETE'),
         detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated, ],
-        url_path='subscribe'
+        permission_classes=[IsAuthenticated],
     )
+    # def subscribe(self, request, id):
+    #     user = request.user
+    #     author = get_object_or_404(User, pk=id)
+    #     data = {'user': user.id, 'author': author.id}
+    #     if request.method == 'POST':
+    #         serializer = SubscribeSerializer(
+    #             data=data, context={'request': request},
+    #         )
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     get_object_or_404(Subscribe, user=user, author=author).delete()
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
     def subscribe(self, request, id=None):
         user = self.request.user
-        author = get_object_or_404(User, pk=id)
+        try:
+            author = User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return Response({'errors': 'Пользователь не найден'},
+                            status=status.HTTP_404_NOT_FOUND)
         if request.method == 'POST':
             if user == author:
                 return Response({'errors': 'На себя подписаться нельзя!'},
                                 status=status.HTTP_400_BAD_REQUEST)
-            if Subscribe.objects.filter(user=user,
-                                        author=author).exists():
+            if Subscribe.objects.filter(user=user, author=author).exists():
                 return Response({'errors':
                                  'Вы уже подписаны на этого пользователя!'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             Subscribe.objects.create(user=user, author=author)
-            serializer = SubscribeSerializer(author,
-                                             context={'request': request}
-                                             )
+            serializer = SubscribeSerializer(
+                author,
+                context={'request': request}
+            )
 
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elif request.method == 'DELETE':
             subscription = Subscribe.objects.filter(user=user, author=author)
             if subscription.exists():
                 subscription.delete()
@@ -72,9 +94,13 @@ class CustomUserViewSet(UserViewSet):
                 {'errors': 'Вы не подписаны на этого пользователя!'},
                 status=status.HTTP_400_BAD_REQUEST)
 
+        return Response({'errors': 'Неподдерживаемый метод запроса'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
     @action(
         detail=False,
         permission_classes=[IsAuthenticated, ],
+        url_path='subscriptions'
     )
     def subscriptions(self, request):
         queryset = User.objects.filter(subscribing__user=request.user)

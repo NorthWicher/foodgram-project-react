@@ -45,11 +45,11 @@ class UserReadSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request.user.is_anonymous:
-            return False
-        return Subscribe.objects.filter(
-            user=request.user,
-            author=obj).exists()
+        if request and request.user.is_authenticated:
+            return Subscribe.objects.filter(
+                user=request.user,
+                author=obj).exists()
+        return False
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -137,17 +137,21 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image)
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.name)
-        instance.cooking_time = validated_data.get(
-            'cooking_time',
-            instance.cooking_time
-        )
-        instance.tags.clear()
-        instance.ingredients.clear()
+        instance.cooking_time = validated_data.get('cooking_time',
+                                                   instance.cooking_time)
         tags = validated_data.get('tags')
-        instance.tags.set(tags)
+        if tags is not None:
+            instance.tags.clear()
+            instance.tags.set(tags)
+        else:
+            raise ValidationError("Tags field is required")
         ingredients = validated_data.get('ingredients')
-        IngredientAmount.objects.filter(recipe=recipe).delete()
-        self.create_ingredients_amount(ingredients, recipe)
+        if ingredients is not None:
+            instance.ingredients.clear()
+            IngredientAmount.objects.filter(recipe=recipe).delete()
+            self.create_ingredients_amount(ingredients, recipe)
+        else:
+            raise ValidationError("Ingredients field is required")
         instance.save()
         return instance
 
