@@ -68,4 +68,3 @@ class Subscribe(models.Model):
 
     def __str__(self):
         return f'Пользователь {self.user} подписался на автора {self.author}'
-
