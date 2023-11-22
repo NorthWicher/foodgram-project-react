@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
+from users.models import Subscribe, User
+
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
-from users.models import Subscribe, User
 
 empty_value = settings.EMPTY_VALUE_DISPLAY
 

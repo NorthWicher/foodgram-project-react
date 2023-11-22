@@ -1,39 +1,34 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.utils.translation import gettext_lazy as _
+from django.db import models
 
 
 class User(AbstractUser):
     """Абстрактная модель пользователя."""
-    username_validator = UnicodeUsernameValidator()
-
     username = models.CharField(
-        _("username"),
+        'Имя пользователя',
         max_length=150,
         unique=True,
-        help_text=_(
-            "Required. 150 characters or fewer. Letters, digits and @/./+/-/_."
-        ),
-        validators=[username_validator],
+        help_text='Обязательное. 150 символов или меньше. Буквы, цифры и @/+/',
+        validators=[UnicodeUsernameValidator()],
         error_messages={
-            "unique": _("A user with that username already exists."),
+            "unique": "Пользователь с таким именем уже существует.",
         },
     )
-    first_name = models.CharField(_("first name"), max_length=150)
-    last_name = models.CharField(_("last name"), max_length=150)
-    password = models.CharField(_("password"), max_length=150)
+    first_name = models.CharField("Имя", max_length=150)
+    last_name = models.CharField("Фамилия", max_length=150)
+    password = models.CharField("Пароль", max_length=150)
     email = models.EmailField(
-        _("email address"),
+        "Адрес электронной почты",
         max_length=254,
         unique=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = [
+    REQUIRED_FIELDS = (
         'username',
         'first_name',
         'last_name',
-    ]
+    )
 
     class Meta:
         ordering = ('id',)
@@ -67,8 +62,10 @@ class Subscribe(models.Model):
         ordering = ('id',)
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        models.UniqueConstraint(fields=['user', 'author'],
-                                name='unique_ff')
+        constraints = [models.UniqueConstraint(
+            fields=['user', 'author'],
+            name='unique_ff')]
 
     def __str__(self):
         return f'Пользователь {self.user} подписался на автора {self.author}'
+

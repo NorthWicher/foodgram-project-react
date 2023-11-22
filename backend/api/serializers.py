@@ -2,9 +2,12 @@ import base64
 
 import webcolors
 from django.core.files.base import ContentFile
+from django.db import transaction
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT,
+                               MIN_COOKING_TIME,)
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
-                            RecipeIngredient, ShoppingCart, Tag)
+                            ShoppingCart, Tag)
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.serializers import ValidationError
@@ -124,6 +127,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             for ingredient in ingredients
         ])
 
+    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -133,57 +137,72 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        recipe = instance
-        instance.image = validated_data.get('image', instance.image)
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.name)
-        instance.cooking_time = validated_data.get('cooking_time',
-                                                   instance.cooking_time)
-        tags = validated_data.get('tags')
-        if tags is not None:
-            instance.tags.clear()
-            instance.tags.set(tags)
-        else:
-            raise ValidationError("Tags field is required")
-        ingredients = validated_data.get('ingredients')
-        if ingredients is not None:
-            instance.ingredients.clear()
-            IngredientAmount.objects.filter(recipe=recipe).delete()
-            self.create_ingredients_amount(ingredients, recipe)
-        else:
-            raise ValidationError("Ingredients field is required")
-        instance.save()
-        return instance
+        with transaction.atomic():
+            recipe = instance
+            instance.image = validated_data.get('image', instance.image)
+            instance.name = validated_data.get('name', instance.name)
+            instance.text = validated_data.get('text', instance.name)
+            instance.cooking_time = validated_data.get('cooking_time',
+                                                       instance.cooking_time)
+            tags = validated_data.get('tags')
+            if tags is not None:
+                instance.tags.clear()
+                instance.tags.set(tags)
+            else:
+                raise ValidationError('Tags field is required')
+            ingredients = validated_data.get('ingredients')
+            if ingredients is not None:
+                instance.ingredients.clear()
+                IngredientAmount.objects.filter(recipe=recipe).delete()
+                self.create_ingredients_amount(ingredients, recipe)
+            else:
+                raise ValidationError('Ingredients field is required')
+            instance.save()
+            return instance
 
     def to_representation(self, instance):
         return RecipeReadSerializer(instance, context={
             'request': self.context.get('request')
         }).data
 
-    def validate_ingredients(self, ingredients):
-        if not ingredients:
-            raise ValidationError('Необходимо ввести ингредиент')
-        attrs_data = [attr.get('id') for attr in ingredients]
-        print(attrs_data)
-        # for ingredient_id in attrs_data:
-        #     if not Ingredient.objects.filter(id=ingredient_id).exists():
-        #         raise ValidationError("Нет такого рецепта")
-        if len(attrs_data) != len(set(attrs_data)):
-            raise ValidationError(
-                'Ингредиенты для рецепта не должны повторяться')
-        for attr in ingredients:
-            if int(attr.get('amount')) < 1:
-                raise ValidationError('Неверевное количество ингредиента')
-        return ingredients
+    def validate(self, obj):
+        tags = obj.get("tags", [])
+        unique_tags = set(tags)
+        if len(tags) != len(unique_tags):
+            raise serializers.ValidationError('Теги должны быть уникальными.')
 
-    def validate_tags(self, tags):
-        if not tags:
-            raise ValidationError('Необходимо ввести теги')
-        attrs_data = [attr.id for attr in tags]
-        if len(attrs_data) != len(set(attrs_data)):
-            raise ValidationError(
-                'Теги для рецепта не должны повторяться')
-        return tags
+        for field in ('name', 'text', 'cooking_time'):
+            if not obj.get(field):
+                raise serializers.ValidationError(f"""
+                {field} - Обязательное поле.""")
+
+        if not obj.get('tags'):
+            raise serializers.ValidationError('Нужно указать минимум 1 тег.')
+
+        ingredients = obj.get('ingredients', [])
+        if not ingredients:
+            raise serializers.ValidationError('Нужно минимум 1 ингредиент.')
+        if len(ingredients) > MAX_INGREDIENT:
+            raise serializers.ValidationError(f"""
+            Количество ингредиентов не может быть больше
+            {MAX_INGREDIENT}.
+            """)
+
+        ingredient_id_list = [item['id'] for item in ingredients]
+        unique_ingredient_id_list = set(ingredient_id_list)
+        if len(ingredient_id_list) != len(unique_ingredient_id_list):
+            raise serializers.ValidationError(
+                'Ингредиенты должны быть уникальны.'
+            )
+
+        cooking_time = obj.get('cooking_time')
+        if cooking_time < MIN_COOKING_TIME or cooking_time > MAX_COOKING_TIME:
+            raise serializers.ValidationError(f"""Время приготовления
+              должно быть от {MIN_COOKING_TIME}
+                до {MAX_COOKING_TIME} минут.
+                """)
+
+        return obj
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -197,7 +216,18 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
+    """Серилизатор рецептов."""
+    image = Base64ImageField(read_only=True)
+    name = serializers.ReadOnlyField()
+    cooking_time = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class IngredientAmountSerializer(serializers.ModelSerializer):
     """Игредиенты в рецепте."""
     id = serializers.ReadOnlyField(
         source='ingredient.id'
@@ -210,7 +240,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = RecipeIngredient
+        model = IngredientAmount
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
@@ -321,9 +351,9 @@ class SubscribeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         limit_recipes = request.query_params.get('recipes_limit')
         if limit_recipes is not None:
-            recipes = obj.author.all()[:(int(limit_recipes))]
+            recipes = obj.api_favorites.all()[:(int(limit_recipes))]
         else:
-            recipes = obj.recipes.all()
+            recipes = obj.author.all()
         context = {'request': request}
         return RecipeShortSerializer(recipes, many=True,
                                      context=context).data
@@ -341,3 +371,18 @@ class RecipeShortSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time'
         )
+
+
+class RecipeShopSerializer(serializers.ModelSerializer):
+    """Cериализатор для списка покупок."""
+    name = serializers.ReadOnlyField()
+    cooking_time = serializers.ReadOnlyField()
+    image = Base64ImageField(read_only=True)
+
+    class Meta:
+        model = Recipe
+        fields = ('id',
+                  'name',
+                  'image',
+                  'cooking_time'
+                  )

@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-settigs-secret-key')
 
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='localhost').split(',')
 
@@ -60,13 +60,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
-
-# DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-# }
 
 DATABASES = {
     'default': {
@@ -145,3 +138,11 @@ DJOSER = {
 CSRF_TRUSTED_ORIGINS = ['https://food.sytes.net']
 
 EMPTY_VALUE_DISPLAY = '-пусто-'
+
+MAX_INGREDIENT = 50
+MIN_COOKING_TIME = 1
+MAX_COOKING_TIME = 1440
+MIN_INGREDIENT = 1
+
+CONTENT_TYPE = "text/plain"
+FILE_NAME = "shopping_cart.txt"

@@ -1,7 +1,10 @@
 from colorfield.fields import ColorField
 from django.core import validators
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
+from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT,
+                               MIN_COOKING_TIME, MIN_INGREDIENT)
 from users.models import User
 
 
@@ -20,6 +23,10 @@ class Ingredient(models.Model):
         ordering = ('name',)
         verbose_name = 'Ингридиенты'
         verbose_name_plural = 'Ингридиенты'
+        constraints = [
+            UniqueConstraint(fields=['name', 'measurement_unit'],
+                             name='unique_ingredient')
+        ]
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}'
@@ -42,9 +49,7 @@ class Tag(models.Model):
         max_length=200,
         unique=True,
         verbose_name='Уникальный слаг',
-        validators=[validators.RegexValidator(
-            regex='^[-a-zA-Z0-9_]+$',
-            message='Символы недоступны')])
+    )
 
     class Meta:
         ordering = ('name',)
@@ -87,8 +92,13 @@ class Recipe(models.Model):
         verbose_name='Теги',
     )
     cooking_time = models.PositiveSmallIntegerField(
-        validators=(validators.MinValueValidator(1, 'Минимум 1 минута'),),
-        verbose_name='Время приготовления',
+        validators=(
+            validators.MinValueValidator(MIN_COOKING_TIME,
+                                         f'Минимум {MIN_COOKING_TIME} минута'),
+            validators.MaxValueValidator(MAX_COOKING_TIME,
+                                         f'Максимум {MAX_COOKING_TIME} минут')
+        ),
+        verbose_name='Время приготовления'
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
@@ -118,7 +128,11 @@ class IngredientAmount(models.Model):
     amount = models.PositiveIntegerField(
         'Количество',
         default=1,
-        validators=(MinValueValidator(1, 'Минимум 1'),),
+        validators=(validators.MinValueValidator(MIN_INGREDIENT,
+                                                 f'Минимум {MIN_INGREDIENT}'),
+                    validators.MaxValueValidator(MAX_INGREDIENT,
+                                                 f'Максимум {MAX_INGREDIENT}'),
+                    ),
     )
 
     class Meta:
