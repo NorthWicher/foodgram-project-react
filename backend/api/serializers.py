@@ -205,7 +205,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return obj
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class IngredientAmount(serializers.ModelSerializer):
     """Серилизатор рецептов."""
     image = Base64ImageField(read_only=True)
     name = serializers.ReadOnlyField()
@@ -216,7 +216,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class IngredientAmount(serializers.ModelSerializer):
     """Серилизатор рецептов."""
     image = Base64ImageField(read_only=True)
     name = serializers.ReadOnlyField()
