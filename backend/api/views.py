@@ -1,18 +1,8 @@
-from api.filters import IngredientFilter, RecipeFilter
-from api.paginations import RecipePagination
-from api.permissions import IsAuthorOrReadOnly
-from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
-                             RecipeReadSerializer, RecipeSerializer,
-                             SubscribeSerializer, TagSerializer,
-                             UserReadSerializer)
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from foodgram.settings import CONTENT_TYPE, FILE_NAME
-from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
-                            ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -20,6 +10,17 @@ from rest_framework.permissions import (SAFE_METHODS, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
+
+from api.filters import IngredientFilter, RecipeFilter
+from api.paginations import RecipePagination
+from api.permissions import IsAuthorOrReadOnly
+from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
+                             RecipeReadSerializer, RecipeSerializer,
+                             SubscribeSerializer, TagSerializer,
+                             UserReadSerializer)
+from foodgram.settings import FILE_NAME
+from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Subscribe, User
 
 
@@ -103,7 +104,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет рецепта.
        Просмотр, создание, редактирование."""
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthorOrReadOnly]
+    permission_classes = (IsAuthorOrReadOnly,)
     serializer_class = RecipeCreateSerializer
     pagination_class = RecipePagination
     filterset_class = RecipeFilter
@@ -185,21 +186,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
             )
             .values('ingredient__name', 'ingredient__measurement_unit')
-            .annotate(total_amount=Sum("amount"))
+            .annotate(total_amount=Sum('amount'))
         )
 
-        file_contents = [
+        file_contents = (
             f'{ingredient["ingredient__name"]} - {ingredient["total_amount"]}'
             f'{ingredient["ingredient__measurement_unit"]}.'
             for ingredient in ingredients
-        ]
+        )
 
         file_content = '\n'.join(file_contents)
         file = HttpResponse(
             'Список покупок:\n' + file_content,
-            content_type=CONTENT_TYPE
+            content_type='text/plain'
         )
-        file["Content-Disposition"] = f"""attachment; \
-            filename={FILE_NAME}"""
+        file['Content-Disposition'] = f'attachment; \
+            filename={FILE_NAME}'
 
         return file

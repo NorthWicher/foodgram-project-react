@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from users.models import Subscribe, User
@@ -6,11 +5,9 @@ from users.models import Subscribe, User
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
 
-empty_value = settings.EMPTY_VALUE_DISPLAY
-
 
 @admin.register(Ingredient)
-class RecipeIngredientAdmin(ImportExportActionModelAdmin):
+class IngredientAmountAdmin(ImportExportActionModelAdmin):
     list_display = ('name', 'measurement_unit')
     list_filter = ('name',)
     search_fields = ('name',)
@@ -20,7 +17,7 @@ class RecipeIngredientAdmin(ImportExportActionModelAdmin):
 class TagAdmin(admin.ModelAdmin):
     """Админ панель для тегов."""
 
-    list_display = ['name', 'color', 'slug']
+    list_display = ('name', 'color', 'slug',)
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
 

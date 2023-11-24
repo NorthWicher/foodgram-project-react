@@ -1,9 +1,11 @@
-from colorfield.fields import ColorField
 from django.core import validators
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
+
+from colorfield.fields import ColorField
 from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT,
                                MIN_COOKING_TIME, MIN_INGREDIENT)
+
 from users.models import User
 
 
@@ -22,10 +24,10 @@ class Ingredient(models.Model):
         ordering = ('name',)
         verbose_name = 'Ингридиенты'
         verbose_name_plural = 'Ингридиенты'
-        constraints = [
-            UniqueConstraint(fields=['name', 'measurement_unit'],
+        constraints = (
+            UniqueConstraint(fields=('name', 'measurement_unit',),
                              name='unique_ingredient')
-        ]
+        )
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}'
@@ -109,8 +111,8 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
-    def __str__(self):
-        return f'Автор: {self.author.email} рецепт: {self.name}'
+    def get_recipes_count(self, obj):
+        return obj.author.count()
 
 
 class IngredientAmount(models.Model):
@@ -140,67 +142,10 @@ class IngredientAmount(models.Model):
         verbose_name_plural = 'Количество ингредиентов'
 
     def __str__(self):
-        return (f'В рецепте {self.recipe.name} {self.amount} '
-                f'{self.ingredient.measurement_unit} {self.ingredient.name}')
-
-
-class RecipeIngredient(models.Model):
-    """
-    Вспомогательная модель
-    Для реализации связи между моделями
-    Recipe и Ingredient.
-    """
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='ingredient_amounts',
-        verbose_name='Рецепт',
-    )
-    ingredient = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-        verbose_name='Ингредиент',
-    )
-    amount = models.PositiveSmallIntegerField(
-        default=1,
-        validators=(validators.MinValueValidator(
-            1, message='Мин. количество ингридиентов 1'),),
-        verbose_name='Количество',
-    )
-
-    class Meta:
-        ordering = ['recipe']
-        verbose_name = 'ингредиенты'
-        verbose_name_plural = 'Ингредиенты'
-
-    def __str__(self):
-        return f'В рецепте {self.recipe} есть ингредиент {self.ingredient}'
-
-
-class RecipeTag(models.Model):
-    """
-    Вспомогательная модель
-    Для реализации связи между моделями
-    Recipe и Tag.
-    """
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        verbose_name='Рецепт',
-    )
-    tag = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        verbose_name='Тег',
-    )
-
-    class Meta:
-        ordering = ['recipe']
-        verbose_name = 'теги'
-        verbose_name_plural = 'Теги'
-
-    def __str__(self):
-        return f'У рецепта {self.recipe} есть тег {self.tag}'
+        return (f'В рецепте {self.recipe.name} '
+                f'{self.recipe.recipe.count()} '
+                f'ингредиентов {self.ingredient.measurement_unit} '
+                f'{self.ingredient.name}')
 
 
 class Favorite(models.Model):
@@ -219,7 +164,7 @@ class Favorite(models.Model):
     )
 
     class Meta:
-        ordering = ['recipe']
+        ordering = ('recipe',)
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
 

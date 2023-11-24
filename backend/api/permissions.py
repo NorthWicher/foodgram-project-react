@@ -19,7 +19,7 @@ class ReadOnly(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-        raise MethodNotAllowed("Добавление запрещено!")
+        raise MethodNotAllowed('Добавление запрещено!')
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):

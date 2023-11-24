@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-settigs-secret-key')
 
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'True'
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='localhost').split(',')
 
@@ -144,5 +144,4 @@ MIN_COOKING_TIME = 1
 MAX_COOKING_TIME = 1440
 MIN_INGREDIENT = 1
 
-CONTENT_TYPE = "text/plain"
-FILE_NAME = "shopping_cart.txt"
+FILE_NAME = 'shopping_cart.txt'

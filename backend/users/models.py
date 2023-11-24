@@ -12,14 +12,14 @@ class User(AbstractUser):
         help_text='Обязательное. 150 символов или меньше. Буквы, цифры и @/+/',
         validators=[UnicodeUsernameValidator()],
         error_messages={
-            "unique": "Пользователь с таким именем уже существует.",
+            'unique': 'Пользователь с таким именем уже существует.',
         },
     )
-    first_name = models.CharField("Имя", max_length=150)
-    last_name = models.CharField("Фамилия", max_length=150)
-    password = models.CharField("Пароль", max_length=150)
+    first_name = models.CharField('Имя', max_length=150)
+    last_name = models.CharField('Фамилия', max_length=150)
+    password = models.CharField('Пароль', max_length=150)
     email = models.EmailField(
-        "Адрес электронной почты",
+        'Адрес электронной почты',
         max_length=254,
         unique=True)
 
@@ -62,9 +62,9 @@ class Subscribe(models.Model):
         ordering = ('id',)
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        constraints = [models.UniqueConstraint(
+        constraints = (models.UniqueConstraint(
             fields=['user', 'author'],
-            name='unique_ff')]
+            name='unique_ff'))
 
     def __str__(self):
         return f'Пользователь {self.user} подписался на автора {self.author}'
