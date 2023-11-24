@@ -3,7 +3,9 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from foodgram.settings import (MAX_COOKING_TIME,
                                MAX_INGREDIENT,
-                               MIN_COOKING_TIME)
+                               MIN_COOKING_TIME,
+                               MIN_INGREDIENT_AMOUNT,
+                               MAX_INGREDIENT_AMOUNT)
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from djoser.serializers import UserCreateSerializer, UserSerializer
@@ -137,25 +139,25 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         self.create_ingredients_amount(ingredients, recipe)
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
-        with transaction.atomic():
-            recipe = instance
-            instance.image = validated_data.get('image', instance.image)
-            instance.name = validated_data.get('name', instance.name)
-            instance.text = validated_data.get('text', instance.name)
-            instance.cooking_time = validated_data.get('cooking_time',
-                                                       instance.cooking_time)
-            tags = validated_data.get('tags')
-            if tags is not None:
-                instance.tags.clear()
-                instance.tags.set(tags)
-            ingredients = validated_data.get('ingredients')
-            if ingredients is not None:
-                instance.ingredients.clear()
-                IngredientAmount.objects.filter(recipe=recipe).delete()
-                self.create_ingredients_amount(ingredients, recipe)
-            instance.save()
-            return instance
+        recipe = instance
+        instance.image = validated_data.get('image', instance.image)
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.name)
+        instance.cooking_time = validated_data.get('cooking_time',
+                                                   instance.cooking_time)
+        tags = validated_data.get('tags')
+        if tags is not None:
+            instance.tags.clear()
+            instance.tags.set(tags)
+        ingredients = validated_data.get('ingredients')
+        if ingredients is not None:
+            instance.ingredients.clear()
+            IngredientAmount.objects.filter(recipe=recipe).delete()
+            self.create_ingredients_amount(ingredients, recipe)
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         return RecipeReadSerializer(instance, context={
@@ -182,7 +184,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for field in required_fields:
             if not obj.get(field):
                 raise serializers.ValidationError(
-                    '{} - Обязательное поле.'.format(field)
+                    f'{field} - Обязательное поле.'
                 )
 
     def validate_ingredients_count(self, obj):
@@ -191,8 +193,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Нужно минимум 1 ингредиент.')
         if len(ingredients) > MAX_INGREDIENT:
             raise serializers.ValidationError(
-                'Количество ингредиентов не может\
-                    быть больше {}.'.format(MAX_INGREDIENT)
+                f'Количество ингредиентов не может'
+                f'быть больше {MAX_INGREDIENT}.'
             )
 
     def validate_ingredient_uniqueness(self, obj):
@@ -200,30 +202,30 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                                                              [])]
         unique_ingredient_id_list = set(ingredient_id_list)
         if len(ingredient_id_list) != len(unique_ingredient_id_list):
-            raise serializers.ValidationError('Ингредиенты\
-                                              должны быть уникальны.')
+            raise serializers.ValidationError('Ингредиенты'
+                                              'должны быть уникальны.')
 
     def validate_cooking_time(self, obj):
         cooking_time = obj.get('cooking_time')
         if cooking_time < MIN_COOKING_TIME or cooking_time > MAX_COOKING_TIME:
             raise serializers.ValidationError(
-                'Время приготовления должно быть от {} до {} минут.'.format(
-                    MIN_COOKING_TIME, MAX_COOKING_TIME
-                )
+                f'Время приготовления должно быть'
+                f'от {MIN_COOKING_TIME} до {MAX_COOKING_TIME} минут.'
             )
 
     def validate_ingredient_amounts(self, obj):
         ingredients = obj.get('ingredients', [])
         for ingredient in ingredients:
-            min_amount = ingredient.get('min_amount')
-            max_amount = ingredient.get('max_amount')
-            if min_amount is not None and max_amount is not None:
-                if min_amount > max_amount:
+            amount = ingredient.get('amount')
+            if amount is not None:
+                if amount < MIN_INGREDIENT_AMOUNT or (
+                    amount > MAX_INGREDIENT_AMOUNT):
                     raise serializers.ValidationError(
-                        'Минимальное количество ингредиента\
-                            не может быть больше максимального.'
+                        f'Количество ингредиента должно быть в диапазоне'
+                        f'от {MIN_INGREDIENT_AMOUNT}'
+                        f'до {MAX_INGREDIENT_AMOUNT}.'
                     )
-                if min_amount <= 0 or max_amount <= 0:
+                if amount <= 0:
                     raise serializers.ValidationError(
                         'Количество ингредиента должно быть больше нуля.'
                     )
@@ -263,8 +265,8 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['amount'] = (f'В рецепте {instance.recipe.name} '
                                     f'{instance.recipe.ingredients.count()} '
-                                    f'ингредиентов\
-                                        {instance.ingredient.measurement_unit}'
+                                    f'ингредиентов'
+                                    f'{instance.ingredient.measurement_unit}'
                                     f'{instance.ingredient.name}')
         return representation
 

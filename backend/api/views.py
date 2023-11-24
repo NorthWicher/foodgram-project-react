@@ -200,7 +200,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'Список покупок:\n' + file_content,
             content_type='text/plain'
         )
-        file['Content-Disposition'] = f'attachment; \
-            filename={FILE_NAME}'
+        file['Content-Disposition'] = f'attachment; filename={FILE_NAME}'
 
         return file
