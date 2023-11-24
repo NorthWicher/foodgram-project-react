@@ -11,6 +11,7 @@ class IngredientAmountAdmin(ImportExportActionModelAdmin):
     list_display = ('name', 'measurement_unit')
     list_filter = ('name',)
     search_fields = ('name',)
+    autocomplete_fields = ('ingredient',)
 
 
 @admin.register(Tag)
@@ -20,11 +21,6 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'color', 'slug',)
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
-
-
-class IngredientAmountAdmin(admin.TabularInline):
-    model = IngredientAmount
-    autocomplete_fields = ('ingredient', )
 
 
 class RecipeAdmin(admin.ModelAdmin):
