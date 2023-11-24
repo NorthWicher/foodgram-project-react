@@ -4,7 +4,7 @@ from django.db.models.constraints import UniqueConstraint
 
 from colorfield.fields import ColorField
 from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT,
-                               MIN_COOKING_TIME, MIN_INGREDIENT,
+                               MIN_COOKING_TIME,
                                DEFAULT_INGREDIENT_AMOUNT)
 
 from users.models import User

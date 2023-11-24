@@ -219,7 +219,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             amount = ingredient.get('amount')
             if amount is not None:
                 if amount < MIN_INGREDIENT_AMOUNT or (
-                    amount > MAX_INGREDIENT_AMOUNT):
+                   amount > MAX_INGREDIENT_AMOUNT):
                     raise serializers.ValidationError(
                         f'Количество ингредиента должно быть в диапазоне'
                         f'от {MIN_INGREDIENT_AMOUNT}'
