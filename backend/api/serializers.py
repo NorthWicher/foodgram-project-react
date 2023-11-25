@@ -162,7 +162,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         }).data
 
     def validate_tags(self, obj):
-        tags = obj.get('tags', [])
+        tags = obj.get('tags')
         unique_tags = set(tags)
         if len(tags) != len(unique_tags):
             raise serializers.ValidationError('Теги должны быть уникальными.')
