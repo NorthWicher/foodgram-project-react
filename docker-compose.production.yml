@@ -25,7 +25,7 @@ services:
     volumes:
       - static:/frontend_static
   nginx:
-    image: chistyakovn/foodgram_ngin
+    image: chistyakovn/foodgram_nginx
     ports:
       -8080:80
     volumes:
