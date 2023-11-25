@@ -131,6 +131,7 @@ class IngredientAmount(models.Model):
                     f'Максимум {MAX_INGREDIENT_AMOUNT}'),
                     ),
     )
+    objects = models.Manager()
 
     class Meta:
         ordering = ('id',)
