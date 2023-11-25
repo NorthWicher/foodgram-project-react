@@ -62,9 +62,8 @@ class Subscribe(models.Model):
         ordering = ('id',)
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        constraints = (models.UniqueConstraint(
-            fields=['user', 'author'],
-            name='unique_ff'))
+        models.UniqueConstraint(fields=['user', 'author'],
+                                name='unique_ff')
 
     def __str__(self):
         return f'Пользователь {self.user} подписался на автора {self.author}'

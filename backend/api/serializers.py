@@ -225,10 +225,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                         f'от {MIN_INGREDIENT_AMOUNT}'
                         f'до {MAX_INGREDIENT_AMOUNT}.'
                     )
-                if amount <= 0:
-                    raise serializers.ValidationError(
-                        'Количество ингредиента должно быть больше нуля.'
-                    )
 
 
 class IngredientAmount(serializers.ModelSerializer):

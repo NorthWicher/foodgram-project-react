@@ -1,7 +1,7 @@
 version: '3'
 
 volumes:
-  fg_data:
+  pg_data:
   static:
   media:
 
@@ -10,29 +10,25 @@ services:
     image: postgres:13.10
     env_file: .env
     volumes:
-      - fg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
   backend:
-    image: chistyakovn/foodgram_backend  
+    image: chistyakovn/foodgram_backend
     env_file: .env
-    depends_on:
-      - db
     volumes:
       - static:/backend_static
       - media:/app/media
-  frontend:
-    image: chistyakovn/foodgram_frontend
-    volumes:
-      - ./frontend/:/app/result_build/
     depends_on:
       - db
-      - backend
+  frontend:
+    image: chistyakovn/foodgram_frontend
+    command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - static:/frontend_static
   nginx:
     image: chistyakovn/foodgram_nginx
-    ports:
-      - 8080:80
     volumes:
-      - static:/staticfiles/
-      - media:/app/media/
+      - static:/static
+      - media:/media
     depends_on:
       - backend
       - frontend

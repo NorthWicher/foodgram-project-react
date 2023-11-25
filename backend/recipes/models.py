@@ -1,11 +1,10 @@
 from django.core import validators
 from django.db import models
-from django.db.models.constraints import UniqueConstraint
 
 from colorfield.fields import ColorField
-from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT,
+from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT_AMOUNT,
                                MIN_COOKING_TIME,
-                               DEFAULT_INGREDIENT_AMOUNT)
+                               MIN_INGREDIENT_AMOUNT)
 
 from users.models import User
 
@@ -25,10 +24,6 @@ class Ingredient(models.Model):
         ordering = ('name',)
         verbose_name = 'Ингридиенты'
         verbose_name_plural = 'Ингридиенты'
-        constraints = (
-            UniqueConstraint(fields=('name', 'measurement_unit',),
-                             name='unique_ingredient')
-        )
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}'
@@ -130,10 +125,10 @@ class IngredientAmount(models.Model):
     amount = models.PositiveIntegerField(
         'Количество',
         default=1,
-        validators=(validators.MinValueValidator(DEFAULT_INGREDIENT_AMOUNT,
-                    f'Минимум {DEFAULT_INGREDIENT_AMOUNT}'),
-                    validators.MaxValueValidator(MAX_INGREDIENT,
-                                                 f'Максимум {MAX_INGREDIENT}'),
+        validators=(validators.MinValueValidator(MIN_INGREDIENT_AMOUNT,
+                    f'Минимум {MIN_INGREDIENT_AMOUNT}'),
+                    validators.MaxValueValidator(MAX_INGREDIENT_AMOUNT,
+                    f'Максимум {MAX_INGREDIENT_AMOUNT}'),
                     ),
     )
 
