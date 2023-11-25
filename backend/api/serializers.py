@@ -161,12 +161,14 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'request': self.context.get('request')
         }).data
 
-    def validate_tags(self, obj):
-        tags = obj.get('tags')
-        unique_tags = set(tags)
-        if len(tags) != len(unique_tags):
-            raise serializers.ValidationError('Теги должны быть уникальными.')
-        return obj
+    def validate_tags(self, tags):
+        if not tags:
+            raise serializers.ValidationError('Необходимо ввести теги')
+        attrs_data = [attr.id for attr in tags]
+        if len(attrs_data) != len(set(attrs_data)):
+            raise serializers.ValidationError(
+                'Теги для рецепта не должны повторяться')
+        return tags
 
     def validate_required_fields(self, obj):
         required_fields = ('name', 'text', 'cooking_time')
