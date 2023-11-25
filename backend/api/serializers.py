@@ -1,4 +1,3 @@
-
 from django.core.files.base import ContentFile
 from django.db import transaction
 from foodgram.settings import (MAX_COOKING_TIME,
