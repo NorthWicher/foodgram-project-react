@@ -199,14 +199,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                                               'должны быть уникальны.')
         return obj
 
-    def validate_cooking_time(self, obj):
-        cooking_time = obj.get('cooking_time')
-        if cooking_time < MIN_COOKING_TIME or cooking_time > MAX_COOKING_TIME:
+    def validate_cooking_time(self, value):
+        if value < MIN_COOKING_TIME or value > MAX_COOKING_TIME:
             raise serializers.ValidationError(
-                f'Время приготовления должно быть'
-                f'от {MIN_COOKING_TIME} до {MAX_COOKING_TIME} минут.'
+                f'Время приготовления должно быть от {MIN_COOKING_TIME}'
+                f'до {MAX_COOKING_TIME} минут.'
             )
-        return obj
+        return value
 
     def validate_ingredient_amounts(self, obj):
         ingredients = obj.get('ingredients', [])
