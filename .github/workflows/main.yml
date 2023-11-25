@@ -117,6 +117,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
+        ssh_options: "-o IdentitiesOnly=yes"
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "docker-compose.production.yml"
         target: "foodgram"
@@ -127,6 +128,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
+        ssh_options: "-o IdentitiesOnly=yes"
         script: |
           cd foodgram
           sudo docker compose -f docker-compose.production.yml pull
