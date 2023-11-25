@@ -118,7 +118,6 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         ssh_options: "-o IdentitiesOnly=yes"
-        passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "docker-compose.production.yml"
         target: "foodgram"
     - name: Executing remote ssh commands to deploy
@@ -127,7 +126,6 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
-        passphrase: ${{ secrets.SSH_PASSPHRASE }}
         ssh_options: "-o IdentitiesOnly=yes"
         script: |
           cd foodgram
