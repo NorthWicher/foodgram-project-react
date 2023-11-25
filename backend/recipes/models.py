@@ -138,10 +138,8 @@ class IngredientAmount(models.Model):
         verbose_name_plural = 'Количество ингредиентов'
 
     def __str__(self):
-        return (f'В рецепте {self.recipe.name} '
-                f'{self.recipe.recipe.count()} '
-                f'ингредиентов {self.ingredient.measurement_unit} '
-                f'{self.ingredient.name}')
+        return (f'В рецепте {self.recipe.name} {self.amount} '
+                f'{self.ingredient.measurement_unit} {self.ingredient.name}')
 
 
 class Favorite(models.Model):
