@@ -1,19 +1,17 @@
+import base64
+
+import webcolors
 from django.core.files.base import ContentFile
 from django.db import transaction
-from foodgram.settings import (MAX_COOKING_TIME,
-                               MAX_INGREDIENT,
-                               MIN_COOKING_TIME,
-                               MIN_INGREDIENT_AMOUNT,
-                               MAX_INGREDIENT_AMOUNT)
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT,
+                               MAX_INGREDIENT_AMOUNT, MIN_COOKING_TIME,
+                               MIN_INGREDIENT_AMOUNT)
+from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                            ShoppingCart, Tag)
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from users.models import Subscribe, User
-from recipes.models import (Favorite, Ingredient,
-                            IngredientAmount, Recipe,
-                            Tag, ShoppingCart)
-import base64
-import webcolors
 
 
 class Base64ImageField(serializers.ImageField):
