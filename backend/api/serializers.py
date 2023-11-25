@@ -161,20 +161,12 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'request': self.context.get('request')
         }).data
 
-    def validate(self, obj):
-        self.validate_tags(obj)
-        self.validate_required_fields(obj)
-        self.validate_ingredients_count(obj)
-        self.validate_ingredient_uniqueness(obj)
-        self.validate_cooking_time(obj)
-        self.validate_ingredient_amounts(obj)
-        return obj
-
     def validate_tags(self, obj):
         tags = obj.get('tags', [])
         unique_tags = set(tags)
         if len(tags) != len(unique_tags):
             raise serializers.ValidationError('Теги должны быть уникальными.')
+        return obj
 
     def validate_required_fields(self, obj):
         required_fields = ('name', 'text', 'cooking_time')
@@ -183,6 +175,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f'{field} - Обязательное поле.'
                 )
+            return obj
 
     def validate_ingredients_count(self, obj):
         ingredients = obj.get('ingredients', [])
@@ -193,6 +186,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 f'Количество ингредиентов не может'
                 f'быть больше {MAX_INGREDIENT}.'
             )
+        return obj
 
     def validate_ingredient_uniqueness(self, obj):
         ingredient_id_list = [item['id'] for item in obj.get('ingredients',
@@ -201,6 +195,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         if len(ingredient_id_list) != len(unique_ingredient_id_list):
             raise serializers.ValidationError('Ингредиенты'
                                               'должны быть уникальны.')
+        return obj
 
     def validate_cooking_time(self, obj):
         cooking_time = obj.get('cooking_time')
@@ -209,6 +204,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 f'Время приготовления должно быть'
                 f'от {MIN_COOKING_TIME} до {MAX_COOKING_TIME} минут.'
             )
+        return obj
 
     def validate_ingredient_amounts(self, obj):
         ingredients = obj.get('ingredients', [])
@@ -222,6 +218,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                         f'от {MIN_INGREDIENT_AMOUNT}'
                         f'до {MAX_INGREDIENT_AMOUNT}.'
                     )
+                return obj
 
 
 class IngredientAmount(serializers.ModelSerializer):
