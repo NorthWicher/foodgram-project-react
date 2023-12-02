@@ -1,34 +1,45 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.validators import RegexValidator
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
     """Абстрактная модель пользователя."""
+
     username = models.CharField(
-        'Имя пользователя',
+        _("username"),
         max_length=150,
         unique=True,
-        help_text='Обязательное. 150 символов или меньше. Буквы, цифры и @/+/',
+        help_text=_(
+            'Required. 150 characters or fewer. Letters,'
+            'digits and @/./+/-/_ only.'
+        ),
         validators=[UnicodeUsernameValidator()],
         error_messages={
-            'unique': 'Пользователь с таким именем уже существует.',
+            "unique": _("A user with that username already exists."),
         },
     )
-    first_name = models.CharField('Имя', max_length=150)
-    last_name = models.CharField('Фамилия', max_length=150)
-    password = models.CharField('Пароль', max_length=150)
+    first_name = models.CharField(
+        _("first name"), max_length=150,
+        validators=[RegexValidator(
+            regex='^[^$%^&#:;!]+$',
+            message=_('Имя не может содержать символы: $%^&#:;!'),
+            code='invalid_first_name'
+        )])
+    last_name = models.CharField(_("last name"), max_length=150)
     email = models.EmailField(
-        'Адрес электронной почты',
+        _("email address"),
         max_length=254,
         unique=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = (
+    REQUIRED_FIELDS = [
         'username',
         'first_name',
         'last_name',
-    )
+    ]
 
     class Meta:
         ordering = ('id',)
@@ -44,7 +55,7 @@ class Subscribe(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribe',
+        related_name='subscriber',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
