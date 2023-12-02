@@ -1,8 +1,13 @@
 from django.conf import settings
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
-from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
-                            ShoppingCart, Tag)
+
+from recipes.models import (Favorite,
+                            Ingredient,
+                            IngredientAmount,
+                            Recipe,
+                            ShoppingCart,
+                            Tag)
 from users.models import Subscribe, User
 
 empty_value = settings.EMPTY_VALUE_DISPLAY
@@ -37,8 +42,14 @@ class RecipeAdmin(admin.ModelAdmin):
         'author',
         'text',
         'pub_date',
+        'favorited_count',
     )
     list_filter = ('author', 'name', 'tags', 'pub_date')
+
+    def favorited_count(self, obj):
+        return obj.favorite_recipes.count()
+
+    favorited_count.short_description = 'Favorited Count'
 
 
 class UserAdmin(admin.ModelAdmin):

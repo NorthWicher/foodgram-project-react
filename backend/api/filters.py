@@ -1,9 +1,10 @@
 import django_filters as filters
-from recipes.models import Ingredient, Recipe
+from recipes.models import Ingredient, Recipe, Tag
 from users.models import User
+from rest_framework.filters import SearchFilter
 
 
-class IngredientFilter(filters.FilterSet):
+class IngredientFilter(SearchFilter):
     """Фильтрация ингридиентов."""
 
     name = filters.CharFilter(lookup_expr='istartswith')
@@ -53,4 +54,4 @@ class RecipeFilter(filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ('is_favorited', 'is_in_shopping_cart', 'author', 'tags')
+        fields = ['is_favorited', 'is_in_shopping_cart', 'author', 'tags']
