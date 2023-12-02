@@ -5,8 +5,7 @@ from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
                              RecipeReadSerializer, RecipeSerializer,
                              RecipeShopSerializer, SubscribeSerializer,
-                             TagSerializer,
-                             UserReadSerializer)
+                             TagSerializer, UserReadSerializer)
 from django.conf import settings
 from django.db.models import Sum
 from django.http import FileResponse, HttpResponse
@@ -62,11 +61,13 @@ class CustomUserViewSet(UserViewSet):
                 return Response({'errors': 'На себя подписаться нельзя!'},
                                 status=status.HTTP_400_BAD_REQUEST)
             if Subscribe.objects.filter(user=user, author=author).exists():
-                return Response({'errors': 'Вы уже подписаны на этого пользователя!'},
+                return Response({'errors':
+                                 'Вы уже подписаны на этого пользователя!'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             Subscribe.objects.create(user=user, author=author)
-            serializer = SubscribeSerializer(author, context={'request': request})
+            serializer = SubscribeSerializer(author, context={'request':
+                                                              request})
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
@@ -179,23 +180,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 recipe, data=request.data, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
-            if not ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            if not ShoppingCart.objects.filter(user=user,
+                                               recipe=recipe).exists():
                 ShoppingCart.objects.create(user=user, recipe=recipe)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
             return Response(
-                {"errors": "Рецепт уже в списке"}, status=status.HTTP_400_BAD_REQUEST
+                {"errors": "Рецепт уже в списке"},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         # Проверка существования объекта ShoppingCart
-        shopping_cart = ShoppingCart.objects.filter(user=user, recipe=recipe).first()
+        shopping_cart = ShoppingCart.objects.filter(user=user,
+                                                    recipe=recipe).first()
         if not shopping_cart:
             return Response(
-                {"errors": "Рецепт не найден в корзине"}, status=status.HTTP_400_BAD_REQUEST
+                {"errors": "Рецепт не найден в корзине"},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         shopping_cart.delete()
         return Response(
-            {"detail": "Рецепт удален из корзины"}, status=status.HTTP_204_NO_CONTENT
+            {"detail": "Рецепт удален из корзины"},
+            status=status.HTTP_204_NO_CONTENT
         )
 
     @action(
