@@ -258,6 +258,20 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                                            user=request.user).exists()
 
 
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Класс сериализатора для представления краткой версии рецепта."""
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
+
+
 class SubscribeSerializer(serializers.ModelSerializer):
     """
     Данные о пользователе, на которого
@@ -293,23 +307,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         limit_recipes = request.query_params.get('recipes_limit')
         if limit_recipes is not None:
-            recipes = obj.author.all()[:(int(limit_recipes))]
+            recipes = Recipe.objects.filter(author=obj)[:int(limit_recipes)]
         else:
             recipes = obj.favorite_recipes.all()
         context = {'request': request}
-        return RecipeShortSerializer(recipes, many=True,
-                                     context=context).data
-
-
-class RecipeShortSerializer(serializers.ModelSerializer):
-    """Класс сериализатора для представления краткой версии рецепта."""
-    image = Base64ImageField()
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time'
-        )
+        return RecipeShortSerializer(recipes, many=True, context=context).data
