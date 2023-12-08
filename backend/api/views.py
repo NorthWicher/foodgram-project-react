@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, Ingredient, Recipe,
+from recipes.models import (Favorite, Ingredient, Recipe, IngredientAmount,
                             ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -214,3 +214,33 @@ class RecipeViewSet(viewsets.ModelViewSet):
             {"detail": "Рецепт удален из корзины"},
             status=status.HTTP_204_NO_CONTENT
         )
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=(IsAuthenticated,))
+    def download_shopping_cart(self, request, **kwargs):
+        ingredients = (
+            IngredientAmount.objects.filter(
+
+            )
+            .values("ingredient__name", "ingredient__measurement_unit")
+            .annotate(total_amount=Sum("amount"))
+        )
+
+        file_contents = [
+            f'{ingredient["ingredient__name"]} - {ingredient["total_amount"]}'
+            f'{ingredient["ingredient__measurement_unit"]}.'
+            for ingredient in ingredients
+        ]
+
+        file_content = "\n".join(file_contents)
+        file = HttpResponse(
+            "Список покупок:\n" + file_content,
+            content_type=CONTENT_TYPE
+        )
+        file["Content-Disposition"] = f"attachment; \
+            filename={settings.FILE_NAME}"
+
+        return file
+
