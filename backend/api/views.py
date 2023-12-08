@@ -157,7 +157,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
         if request.method == "DELETE":
-            # Переносим удаление из избранного сюда
             get_object_or_404(
                 Favorite, user=request.user, recipe=recipe
             ).delete()
@@ -199,7 +198,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Проверка существования объекта ShoppingCart
         shopping_cart = ShoppingCart.objects.filter(
             user=user,
             recipe=recipe).first()
@@ -243,4 +241,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
             filename={settings.FILE_NAME}"
 
         return file
-
