@@ -47,20 +47,23 @@ class CustomUserViewSet(UserViewSet):
     )
     def subscribe(self, request, id=None):
         user = self.request.user
-        author = get_object_or_404(User, pk=id)
+        try:
+            author = User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return Response({'errors': 'Пользователь не найден'},
+                            status=status.HTTP_404_NOT_FOUND)
         if request.method == 'POST':
             if user == author:
                 return Response({'errors': 'На себя подписаться нельзя!'},
                                 status=status.HTTP_400_BAD_REQUEST)
             if Subscribe.objects.filter(user=user, author=author).exists():
-                return Response(
-                    {'errors': 'Вы уже подписаны на этого пользователя!'},
-                    status=status.HTTP_400_BAD_REQUEST)
+                return Response({'errors':
+                                 'Вы уже подписаны на этого пользователя!'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
             Subscribe.objects.create(user=user, author=author)
-            serializer = SubscribeSerializer(
-                author,
-                context={'request': request})
+            serializer = SubscribeSerializer(author,
+                                             context={'request': request})
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == 'DELETE':
@@ -165,60 +168,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_204_NO_CONTENT,
             )
 
-    # @action(
-    #     detail=True,
-    #     methods=['POST', 'DELETE'],
-    #     permission_classes=(IsAuthenticated,),
-    #     pagination_class=None)
-    # def shopping_cart(self, request, **kwargs):
-    #     try:
-    #         recipe = Recipe.objects.get(id=kwargs.get("pk"))
-    #     except Recipe.DoesNotExist:
-    #         return Response(
-    #             {"errors": "Рецепт не найден."},
-    #             status=status.HTTP_400_BAD_REQUEST,
-    #         )
-
-    #     user = request.user
-
-    #     if request.method == "POST":
-    #         serializer = RecipeShopSerializer(
-    #             recipe, data=request.data, context={"request": request}
-    #         )
-    #         serializer.is_valid(raise_exception=True)
-    #         if not ShoppingCart.objects.filter(
-    #             user=user, recipe=recipe
-    #         ).exists():
-    #             ShoppingCart.objects.create(user=user, recipe=recipe)
-    #             return Response(
-    #                 serializer.data,
-    #                 status=status.HTTP_201_CREATED)
-    #         return Response(
-    #             {"errors": "Рецепт уже в списке"},
-    #             status=status.HTTP_400_BAD_REQUEST
-    #         )
-
-    #     shopping_cart = ShoppingCart.objects.filter(
-    #         user=user,
-    #         recipe=recipe).first()
-    #     if not shopping_cart:
-    #         return Response(
-    #             {"errors": "Рецепт не найден в корзине"},
-    #             status=status.HTTP_400_BAD_REQUEST
-    #         )
-
-        # shopping_cart.delete()
-        # return Response(
-        #     {"detail": "Рецепт удален из корзины"},
-        #     status=status.HTTP_204_NO_CONTENT
-        # )
     @action(
         detail=True,
         methods=['POST', 'DELETE'],
-        permission_classes=[IsAuthenticatedOrReadOnly],
+        permission_classes=(IsAuthenticated,),
         pagination_class=None)
     def shopping_cart(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs.get("pk"))
+        try:
+            recipe = Recipe.objects.get(id=kwargs.get("pk"))
+        except Recipe.DoesNotExist:
+            return Response(
+                {"errors": "Рецепт не найден."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         user = request.user
 
         if request.method == "POST":
@@ -226,19 +189,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 recipe, data=request.data, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
-            if not ShoppingCart.objects.filter(user=user,
-                                               recipe=recipe).exists():
+            if not ShoppingCart.objects.filter(
+                user=user, recipe=recipe
+            ).exists():
                 ShoppingCart.objects.create(user=user, recipe=recipe)
-                return Response(serializer.data,
-                                status=status.HTTP_201_CREATED)
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED)
             return Response(
                 {"errors": "Рецепт уже в списке"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Проверка существования объекта ShoppingCart
-        shopping_cart = ShoppingCart.objects.filter(user=user,
-                                                    recipe=recipe).first()
+        shopping_cart = ShoppingCart.objects.filter(
+            user=user,
+            recipe=recipe).first()
         if not shopping_cart:
             return Response(
                 {"errors": "Рецепт не найден в корзине"},
@@ -250,6 +215,44 @@ class RecipeViewSet(viewsets.ModelViewSet):
             {"detail": "Рецепт удален из корзины"},
             status=status.HTTP_204_NO_CONTENT
         )
+    # @action(
+    #     detail=True,
+    #     methods=['POST', 'DELETE'],
+    #     permission_classes=[IsAuthenticatedOrReadOnly],
+    #     pagination_class=None)
+    # def shopping_cart(self, request, **kwargs):
+    #     recipe = get_object_or_404(Recipe, id=kwargs.get("pk"))
+    #     user = request.user
+
+    #     if request.method == "POST":
+    #         serializer = RecipeShopSerializer(
+    #             recipe, data=request.data, context={"request": request}
+    #         )
+    #         serializer.is_valid(raise_exception=True)
+    #         if not ShoppingCart.objects.filter(user=user,
+    #                                            recipe=recipe).exists():
+    #             ShoppingCart.objects.create(user=user, recipe=recipe)
+    #             return Response(serializer.data,
+    #                             status=status.HTTP_201_CREATED)
+    #         return Response(
+    #             {"errors": "Рецепт уже в списке"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    #     # Проверка существования объекта ShoppingCart
+    #     shopping_cart = ShoppingCart.objects.filter(user=user,
+    #                                                 recipe=recipe).first()
+    #     if not shopping_cart:
+    #         return Response(
+    #             {"errors": "Рецепт не найден в корзине"},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    #     shopping_cart.delete()
+    #     return Response(
+    #         {"detail": "Рецепт удален из корзины"},
+    #         status=status.HTTP_204_NO_CONTENT
+    #     )
 
     @action(
         detail=False,
