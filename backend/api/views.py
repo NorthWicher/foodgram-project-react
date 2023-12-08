@@ -45,9 +45,9 @@ class CustomUserViewSet(UserViewSet):
         detail=True,
         permission_classes=[IsAuthenticated],
     )
-    def subscribe(self, request, pk=None):
+    def subscribe(self, request, id=None):
         user = self.request.user
-        author = get_object_or_404(User, id=pk)
+        author = get_object_or_404(User, pk=id)
         if request.method == 'POST':
             if user == author:
                 return Response({'errors': 'На себя подписаться нельзя!'},
