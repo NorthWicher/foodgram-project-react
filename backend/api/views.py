@@ -3,10 +3,9 @@ import io
 from api.paginations import RecipePagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
-                             RecipeReadSerializer, RecipeSerializer,
+                             RecipeReadSerializer,
                              RecipeShopSerializer, SubscribeSerializer,
-                             TagSerializer,
-                             UserReadSerializer)
+                             TagSerializer, UserReadSerializer)
 from django.conf import settings
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -26,7 +25,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from users.models import Subscribe, User
 
-from api.filters import IngredientFilter, RecipeFilter
+from .filters import IngredientFilter, RecipeFilter
 
 CONTENT_TYPE = "text/plain"
 
@@ -59,8 +58,7 @@ class CustomUserViewSet(UserViewSet):
                             status=status.HTTP_404_NOT_FOUND)
         if request.method == 'POST':
             if user == author:
-                return Response({'errors':
-                                 'На себя подписаться нельзя!'},
+                return Response({'errors': 'На себя подписаться нельзя!'},
                                 status=status.HTTP_400_BAD_REQUEST)
             if Subscribe.objects.filter(user=user, author=author).exists():
                 return Response({'errors':
