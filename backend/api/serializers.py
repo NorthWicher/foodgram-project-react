@@ -1,7 +1,8 @@
 import base64
 
+import webcolors
 from django.core.files.base import ContentFile
-from djoser.serializers import UserSerializer, UserCreateSerializer
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import serializers
@@ -19,18 +20,6 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
 
         return super().to_internal_value(data)
-
-
-class UserCreateSerializer(UserCreateSerializer):
-    """Создание пользователя с обязательными полями."""
-    class Meta:
-        model = User
-        fields = ('email',
-                  'id',
-                  'username',
-                  'first_name',
-                  'last_name',
-                  'password')
 
 
 class UserReadSerializer(UserSerializer):
@@ -258,20 +247,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                                            user=request.user).exists()
 
 
-class RecipeShortSerializer(serializers.ModelSerializer):
-    """Класс сериализатора для представления краткой версии рецепта."""
-    image = Base64ImageField()
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time'
-        )
-
-
 class SubscribeSerializer(serializers.ModelSerializer):
     """
     Данные о пользователе, на которого
@@ -307,8 +282,23 @@ class SubscribeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         limit_recipes = request.query_params.get('recipes_limit')
         if limit_recipes is not None:
-            recipes = Recipe.objects.filter(author=obj)[:int(limit_recipes)]
+            recipes = obj.author.all()[:(int(limit_recipes))]
         else:
             recipes = obj.favorite_recipes.all()
         context = {'request': request}
-        return RecipeShortSerializer(recipes, many=True, context=context).data
+        return RecipeShortSerializer(recipes, many=True,
+                                     context=context).data
+
+
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Класс сериализатора для представления краткой версии рецепта."""
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
