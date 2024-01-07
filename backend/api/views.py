@@ -34,7 +34,7 @@ CONTENT_TYPE = "text/plain"
 class CustomUserViewSet(UserViewSet):
     """Вьюсет для просмотра профиля и создания пользователя."""
     queryset = User.objects.all()
-    permission_classes = [IsAuthenticatedOrReadOnly, ]
+    permission_classes = (IsAuthenticatedOrReadOnly)
     pagination_class = RecipePagination
 
     @action(detail=False, methods=['get'],
@@ -48,7 +48,7 @@ class CustomUserViewSet(UserViewSet):
     @action(
         methods=('POST', 'DELETE'),
         detail=True,
-        permission_classes=[IsAuthenticated],
+        permission_classes=(IsAuthenticated),
     )
     def subscribe(self, request, id=None):
         user = self.request.user
@@ -87,7 +87,7 @@ class CustomUserViewSet(UserViewSet):
 
     @action(
         detail=False,
-        permission_classes=[IsAuthenticated, ],
+        permission_classes=(IsAuthenticated),
         url_path='subscriptions'
     )
     def subscriptions(self, request):
@@ -118,7 +118,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет рецепта.
        Просмотр, создание, редактирование."""
     queryset = Recipe.objects.all()
-    permission_classes = [IsAuthorOrReadOnly]
+    permission_classes = (IsAuthorOrReadOnly)
     serializer_class = RecipeCreateSerializer
     pagination_class = RecipePagination
     filterset_class = RecipeFilter
@@ -134,8 +134,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
+        methods=('post', 'delete'),
+        permission_classes=(IsAuthenticated)
     )
     def favorite(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs.get("pk"))
@@ -169,7 +169,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=['POST', 'DELETE'],
+        methods=('POST', 'DELETE'),
         permission_classes=(IsAuthenticated,),
         pagination_class=None)
     def shopping_cart(self, request, **kwargs):
