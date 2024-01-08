@@ -2,7 +2,10 @@ import base64
 
 import webcolors
 from django.core.files.base import ContentFile
+from django.db import transaction
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT_AMOUNT,
+                               MIN_COOKING_TIME, MIN_INGREDIENT_AMOUNT)
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
 from rest_framework import serializers
@@ -112,6 +115,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             for ingredient in ingredients
         ])
 
+    @transaction.atomic
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
@@ -120,6 +124,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         self.create_ingredients_amount(ingredients, recipe)
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         recipe = instance
         instance.image = validated_data.get('image', instance.image)
@@ -131,15 +136,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         if tags is not None:
             instance.tags.clear()
             instance.tags.set(tags)
-        else:
-            raise ValidationError("Tags field is required")
         ingredients = validated_data.get('ingredients')
         if ingredients is not None:
             instance.ingredients.clear()
             IngredientAmount.objects.filter(recipe=recipe).delete()
             self.create_ingredients_amount(ingredients, recipe)
-        else:
-            raise ValidationError("Ingredients field is required")
         instance.save()
         return instance
 
@@ -152,12 +153,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         if not ingredients:
             raise ValidationError('Необходимо ввести ингредиент')
         attrs_data = [attr.get('id') for attr in ingredients]
-        print(attrs_data)
         if len(attrs_data) != len(set(attrs_data)):
             raise ValidationError(
                 'Ингредиенты для рецепта не должны повторяться')
         for attr in ingredients:
-            if int(attr.get('amount')) < 1:
+            if int(attr.get('amount')) < MIN_INGREDIENT_AMOUNT:
                 raise ValidationError('Неверевное количество ингредиента')
         return ingredients
 
@@ -167,8 +167,36 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         attrs_data = [attr.id for attr in tags]
         if len(attrs_data) != len(set(attrs_data)):
             raise ValidationError(
-                'Теги для рецепта не должны повторяться')
+                'Теги для рецепта не должны повторяться'
+            )
         return tags
+
+    def validate_min_max_ingredients(self, ingredients):
+        if len(ingredients) < MIN_INGREDIENT_AMOUNT:
+            raise ValidationError(f'Минимальное количество ингредиентов:'
+                                  f'{MIN_INGREDIENT_AMOUNT}')
+        if len(ingredients) > MAX_INGREDIENT_AMOUNT:
+            raise ValidationError(f'Максимальное количество ингредиентов:'
+                                  f'{MAX_INGREDIENT_AMOUNT}')
+        return ingredients
+
+    def validate_cooking_time(self, cooking_time):
+        if cooking_time < MIN_COOKING_TIME:
+            raise ValidationError(f'Минимальное время готовки:'
+                                  f'{MIN_COOKING_TIME} минута')
+        if cooking_time > MAX_COOKING_TIME:
+            raise ValidationError(f'Максимальное время готовки:'
+                                  f'{MAX_COOKING_TIME} минут (10 часов)')
+        return cooking_time
+
+    def validate_duplicate_ingredients(self, ingredients):
+        attrs_data = [attr.get('id') for attr in ingredients]
+        if len(attrs_data) != len(set(attrs_data)):
+            raise ValidationError('Ингредиенты для рецепта'
+                                  'не должны повторяться')
+        if not ingredients:
+            raise ValidationError('Нельзя создать рецепт без ингредиента')
+        return ingredients
 
 
 class RecipeSerializer(serializers.ModelSerializer):
