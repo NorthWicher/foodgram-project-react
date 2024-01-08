@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 
@@ -9,8 +8,6 @@ from recipes.models import (Favorite,
                             ShoppingCart,
                             Tag)
 from users.models import Subscribe, User
-
-empty_value = settings.EMPTY_VALUE_DISPLAY
 
 
 @admin.register(Ingredient)

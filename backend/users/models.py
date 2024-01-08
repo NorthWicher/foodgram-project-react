@@ -9,7 +9,7 @@ class User(AbstractUser):
     """Абстрактная модель пользователя."""
 
     username = models.CharField(
-        _("username"),
+        _('username'),
         max_length=150,
         unique=True,
         help_text=_(
@@ -18,19 +18,19 @@ class User(AbstractUser):
         ),
         validators=[UnicodeUsernameValidator()],
         error_messages={
-            "unique": _("A user with that username already exists."),
+            'unique': _('A user with that username already exists.'),
         },
     )
     first_name = models.CharField(
-        _("first name"), max_length=150,
+        _('first name'), max_length=150,
         validators=[RegexValidator(
             regex='^[^$%^&#:;!]+$',
             message=_('Имя не может содержать символы: $%^&#:;!'),
             code='invalid_first_name'
         )])
-    last_name = models.CharField(_("last name"), max_length=150)
+    last_name = models.CharField(_('last name'), max_length=150)
     email = models.EmailField(
-        _("email address"),
+        _('email address'),
         max_length=254,
         unique=True)
 
