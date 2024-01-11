@@ -7,10 +7,10 @@ from foodgram.settings import MIN_AMOUNT_MODEL, MIN_TIME_MODEL
 
 
 class Ingredient(models.Model):
-    """Модель ингридиента."""
+    """Модель ингредиенты."""
     name = models.CharField(
         max_length=200,
-        verbose_name='Название ингридиента',
+        verbose_name='Название ингредиенты',
     )
     measurement_unit = models.CharField(
         max_length=200,
@@ -19,8 +19,8 @@ class Ingredient(models.Model):
 
     class Meta:
         ordering = ('name',)
-        verbose_name = 'Ингридиенты'
-        verbose_name_plural = 'Ингридиенты'
+        verbose_name = 'Игредиенты'
+        verbose_name_plural = 'Игредиенты'
         models.UniqueConstraint(fields=['user', 'measurement_unit'],
                                 name='unique_ingredient')
 
