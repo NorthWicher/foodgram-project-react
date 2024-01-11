@@ -1,12 +1,8 @@
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
-
-from recipes.models import (Favorite,
-                            Ingredient,
-                            IngredientAmount,
-                            Recipe,
-                            ShoppingCart,
-                            Tag)
+from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
+                            ShoppingCart, Tag)
+from django.core.exceptions import ValidationError
 from users.models import Subscribe, User
 
 
@@ -28,11 +24,10 @@ class TagAdmin(admin.ModelAdmin):
 
 class IngredientAmountAdmin(admin.TabularInline):
     model = IngredientAmount
-    autocomplete_fields = ('ingredient', )
 
 
+@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    inlines = (IngredientAmountAdmin,)
     list_display = (
         'id',
         'name',
@@ -41,12 +36,29 @@ class RecipeAdmin(admin.ModelAdmin):
         'pub_date',
         'favorited_count',
     )
-    list_filter = ('author', 'name', 'tags', 'pub_date')
+    list_filter = ('author', 'tags', 'pub_date')
+    search_fields = ('author__username', 'name')
 
     def favorited_count(self, obj):
         return obj.favorite_recipes.count()
 
     favorited_count.short_description = 'Favorited Count'
+
+    inlines = (IngredientAmountAdmin,)
+
+    def save_model(self, request, obj, form, change):
+        if not obj.image:
+            raise ValidationError('Поле изображения'
+                                  'обязательно для заполнения')
+        super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        for formset in formsets:
+            for form in formset.forms:
+                if not form.cleaned_data.get('name'):
+                    raise ValidationError('Данное поле обязательное'
+                                          'для заполнения')
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -63,6 +75,7 @@ class UserAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
+@admin.register(Favorite)
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
@@ -73,6 +86,10 @@ class SubscribeAdmin(admin.ModelAdmin):
     search_fields = ('user',)
     list_filter = ('user',)
     empty_value_display = '-пусто-'
+    search_fields = ('user__username',
+                     'user__email',
+                     'author__username',
+                     'author__email')
 
 
 admin.register(IngredientAmount)
