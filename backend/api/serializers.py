@@ -1,9 +1,8 @@
 import base64
 
-import webcolors
 from django.core.files.base import ContentFile
 from django.db import transaction
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import UserSerializer
 from foodgram.settings import (MAX_COOKING_TIME, MAX_INGREDIENT_AMOUNT,
                                MIN_COOKING_TIME, MIN_INGREDIENT_AMOUNT)
 from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
