@@ -24,7 +24,7 @@ class TagAdmin(admin.ModelAdmin):
 
 class IngredientAmountAdmin(admin.TabularInline):
     model = IngredientAmount
-    extra = 1  # Добавляем обязательное поле для заполнения
+    extra = 1
 
 
 @admin.register(Recipe)
@@ -68,17 +68,17 @@ class UserAdmin(admin.ModelAdmin):
 
 
 @admin.register(Favorite)
-class FavoriteAdmin(admin.ModelAdmin):  # Исправлено название класса
+class FavoriteAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'user',
-        'recipe',  # Исправлено название поля
+        'recipe',
         'pub_date',
     )
-    search_fields = ('user__username',  # Исправлено название поля
-                     'user__email',  # Исправлено название поля
-                     'recipe__name')  # Исправлено название поля
-    list_filter = ('user',)  # Исправлено название поля
+    search_fields = ('user__username',
+                     'user__email',
+                     'recipe__name')
+    list_filter = ('user',)
     empty_value_display = '-пусто-'
 
 
