@@ -1,7 +1,7 @@
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
-from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
-                            ShoppingCart, Tag)
+from recipes.models import (Favorite, Ingredient, Recipe,
+                            ShoppingCart, Tag, IngredientAmount)
 from django.core.exceptions import ValidationError
 from users.models import Subscribe, User
 
@@ -9,7 +9,7 @@ from users.models import Subscribe, User
 @admin.register(Ingredient)
 class RecipeIngredientAdmin(ImportExportActionModelAdmin):
     list_display = ('name', 'measurement_unit')
-    list_filter = ('name',)
+    list_filter = ('measurement_unit',)
     search_fields = ('name',)
 
 
@@ -32,11 +32,10 @@ class RecipeAdmin(admin.ModelAdmin):
         'id',
         'name',
         'author',
-        'text',
         'pub_date',
         'favorited_count',
     )
-    list_filter = ('author', 'tags', 'pub_date')
+    list_filter = ('tags', 'pub_date')
     search_fields = ('author__username', 'name')
 
     def favorited_count(self, obj):
@@ -56,7 +55,7 @@ class RecipeAdmin(admin.ModelAdmin):
         super().save_related(request, form, formsets, change)
         for formset in formsets:
             for form in formset.forms:
-                if not form.cleaned_data.get('name'):
+                if not form.cleaned_data.get('ingredient'):
                     raise ValidationError('Данное поле обязательное'
                                           'для заполнения')
 
@@ -76,25 +75,20 @@ class UserAdmin(admin.ModelAdmin):
 
 
 @admin.register(Favorite)
-class SubscribeAdmin(admin.ModelAdmin):
+class FavoriteAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'user',
-        'author',
+        'recipe',
         'pub_date',
     )
-    search_fields = ('user',)
-    list_filter = ('user',)
-    empty_value_display = '-пусто-'
     search_fields = ('user__username',
                      'user__email',
-                     'author__username',
-                     'author__email')
+                     'recipe__name')
+    list_filter = ('user',)
+    empty_value_display = '-пусто-'
 
 
-admin.register(IngredientAmount)
-admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Favorite)
 admin.site.register(ShoppingCart)
 admin.site.register(Subscribe)
 admin.site.register(User, UserAdmin)
