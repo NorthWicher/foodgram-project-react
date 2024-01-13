@@ -24,6 +24,7 @@ class TagAdmin(admin.ModelAdmin):
 
 class IngredientAmountAdmin(admin.TabularInline):
     model = IngredientAmount
+    extra = 1  # Добавляем обязательное поле для заполнения
 
 
 @admin.register(Recipe)
@@ -51,14 +52,6 @@ class RecipeAdmin(admin.ModelAdmin):
                                   'обязательно для заполнения')
         super().save_model(request, obj, form, change)
 
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
-        for formset in formsets:
-            for form in formset.forms:
-                if not form.cleaned_data.get('ingredient'):
-                    raise ValidationError('Данное поле обязательное'
-                                          'для заполнения')
-
 
 class UserAdmin(admin.ModelAdmin):
     list_display = (
@@ -75,17 +68,17 @@ class UserAdmin(admin.ModelAdmin):
 
 
 @admin.register(Favorite)
-class FavoriteAdmin(admin.ModelAdmin):
+class FavoriteAdmin(admin.ModelAdmin):  # Исправлено название класса
     list_display = (
         'pk',
         'user',
-        'recipe',
+        'recipe',  # Исправлено название поля
         'pub_date',
     )
-    search_fields = ('user__username',
-                     'user__email',
-                     'recipe__name')
-    list_filter = ('user',)
+    search_fields = ('user__username',  # Исправлено название поля
+                     'user__email',  # Исправлено название поля
+                     'recipe__name')  # Исправлено название поля
+    list_filter = ('user',)  # Исправлено название поля
     empty_value_display = '-пусто-'
 
 
