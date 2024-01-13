@@ -23,7 +23,7 @@ class TagAdmin(admin.ModelAdmin):
 
 
 class IngredientAmountAdmin(admin.TabularInline):
-    model = IngredientAmount
+    model = Recipe.ingredients.through
     extra = 1
 
 
