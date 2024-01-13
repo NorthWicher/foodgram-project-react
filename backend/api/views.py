@@ -191,11 +191,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             status=status.HTTP_204_NO_CONTENT
         )
 
-    @action(
-        detail=True,
-        methods=('GET',),
-        permission_classes=(IsAuthenticated,),
-        pagination_class=None)
+    @action(methods=['get'], detail=False)
     def shopping_cart_download(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs.get('pk'))
         user = request.user
