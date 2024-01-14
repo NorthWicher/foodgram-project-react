@@ -22,6 +22,11 @@ class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
+class IngredientAmountInline(admin.TabularInline):
+    model = IngredientAmount
+    extra = 1
+
+
 class IngredientAmountAdmin(admin.TabularInline):
     model = Recipe.ingredients.through
     extra = 1
@@ -43,7 +48,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorite_recipes.count()
 
     favorited_count.short_description = 'Favorited Count'
-
+    inlines_ingredient = [IngredientAmountInline]
     inlines = (IngredientAmountAdmin,)
 
     def save_model(self, request, obj, form, change):
