@@ -1,5 +1,6 @@
 from colorfield.fields import ColorField
 from django.core import validators
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from users.models import User
@@ -70,8 +71,14 @@ class Recipe(models.Model):
     image = models.ImageField(
         upload_to='recipes/',
         blank=True,
-        verbose_name='Картинка рецепта',
-    )
+        verbose_name='Картинка рецепта',)
+
+    def save(self, *args, **kwargs):
+        if not self.image:
+            raise ValidationError('Поле изображения'
+                                  'обязательно для заполнения')
+        super().save(*args, **kwargs)
+
     text = models.TextField(
         help_text='Введите текст рецепта',
         verbose_name='Описание рецепта',

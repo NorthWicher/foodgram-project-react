@@ -1,22 +1,8 @@
-from django import form
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from recipes.models import (Favorite, Ingredient, Recipe,
                             ShoppingCart, Tag, IngredientAmount)
 from users.models import Subscribe, User
-
-
-class RecipeAdminForm(forms.ModelForm):
-    class Meta:
-        model = Recipe
-        fields = '__all__'
-
-    def clean(self):
-        cleaned_data = super().clean()
-        image = cleaned_data.get('image')
-        if not image:
-            self.add_error('image',
-                           'Поле изображения обязательно для заполнения')
 
 
 @admin.register(Ingredient)
@@ -40,7 +26,6 @@ class IngredientAmountInline(admin.TabularInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    form = RecipeAdminForm
     list_display = (
         'id',
         'name',
