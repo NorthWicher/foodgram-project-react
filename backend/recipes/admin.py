@@ -21,7 +21,7 @@ class TagAdmin(admin.ModelAdmin):
 
 class IngredientAmountInline(admin.TabularInline):
     model = IngredientAmount
-    extra = 1
+    extra = 0
 
 
 @admin.register(Recipe)
