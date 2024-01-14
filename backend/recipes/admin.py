@@ -1,9 +1,22 @@
+from django import form
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from recipes.models import (Favorite, Ingredient, Recipe,
                             ShoppingCart, Tag, IngredientAmount)
-from django.core.exceptions import ValidationError
 from users.models import Subscribe, User
+
+
+class RecipeAdminForm(forms.ModelForm):
+    class Meta:
+        model = Recipe
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        image = cleaned_data.get('image')
+        if not image:
+            self.add_error('image',
+                           'Поле изображения обязательно для заполнения')
 
 
 @admin.register(Ingredient)
@@ -15,8 +28,6 @@ class RecipeIngredientAdmin(ImportExportActionModelAdmin):
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    """Админ панель для тегов."""
-
     list_display = ['name', 'color', 'slug']
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
@@ -27,13 +38,9 @@ class IngredientAmountInline(admin.TabularInline):
     extra = 1
 
 
-class IngredientAmountAdmin(admin.TabularInline):
-    model = Recipe.ingredients.through
-    extra = 1
-
-
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    form = RecipeAdminForm
     list_display = (
         'id',
         'name',
@@ -48,14 +55,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorite_recipes.count()
 
     favorited_count.short_description = 'Favorited Count'
-    inlines_ingredient = [IngredientAmountInline]
-    inlines = (IngredientAmountAdmin,)
-
-    def save_model(self, request, obj, form, change):
-        if not obj.image:
-            raise ValidationError('Поле изображения'
-                                  'обязательно для заполнения')
-        super().save_model(request, obj, form, change)
+    inlines = [IngredientAmountInline]
 
 
 class UserAdmin(admin.ModelAdmin):
