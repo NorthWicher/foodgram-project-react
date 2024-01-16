@@ -1,4 +1,4 @@
-from django.contrib import admin 
+from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from recipes.models import (Favorite, Ingredient, Recipe,
                             ShoppingCart, Tag, IngredientAmount)
