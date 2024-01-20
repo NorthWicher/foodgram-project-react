@@ -85,13 +85,10 @@ class SubscribeAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'user',
-        'following'
     )
     search_fields = (
         'user__username',
         'user__email',
-        'following__username',
-        'following__email'
     )
 
 
