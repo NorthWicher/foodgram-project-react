@@ -5,10 +5,13 @@ from api.serializers import (IngredientSerializer, RecipeCreateSerializer,
                              RecipeShopSerializer, SubscribeSerializer,
                              TagSerializer,
                              UserReadSerializer)
+from django.conf import settings
+from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, Ingredient, Recipe,
+from recipes.models import (Favorite, Ingredient, Recipe, IngredientAmount,
                             ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -20,6 +23,8 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from users.models import Subscribe, User
 
 from api.filters import IngredientFilter, RecipeFilter
+
+CONTENT_TYPE = "text/plain"
 
 
 class CustomUserViewSet(UserViewSet):
@@ -156,16 +161,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=('POST', 'DELETE'),
+        methods=['POST', 'DELETE'],
         permission_classes=(IsAuthenticated,),
         pagination_class=None)
     def shopping_cart(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs.get('pk'))
+        recipe = get_object_or_404(Recipe, id=kwargs.get("pk"))
         user = request.user
 
-        if request.method == 'POST':
+        if request.method == "POST":
             serializer = RecipeShopSerializer(
-                recipe, data=request.data, context={'request': request}
+                recipe, data=request.data, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
             if not ShoppingCart.objects.filter(user=user,
@@ -174,36 +179,50 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data,
                                 status=status.HTTP_201_CREATED)
             return Response(
-                {'errors': 'Рецепт уже в списке'},
+                {"errors": "Рецепт уже в списке"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # Проверка существования объекта ShoppingCart
         shopping_cart = ShoppingCart.objects.filter(user=user,
                                                     recipe=recipe).first()
         if not shopping_cart:
             return Response(
-                {'errors': 'Рецепт не найден в корзине'},
+                {"errors": "Рецепт не найден в корзине"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         shopping_cart.delete()
         return Response(
-            {'detail': 'Рецепт удален из корзины'},
+            {"detail": "Рецепт удален из корзины"},
             status=status.HTTP_204_NO_CONTENT
         )
 
-    @action(methods=['get'], detail=False)
-    def shopping_cart_download(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs.get('pk'))
-        user = request.user
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=(IsAuthenticated,))
+    def download_shopping_cart(self, request, **kwargs):
+        ingredients = (
+            IngredientAmount.objects.filter(
 
-        shopping_cart = ShoppingCart.objects.filter(user=user,
-                                                    recipe=recipe).first()
-        if not shopping_cart:
-            return Response(
-                {'errors': 'Рецепт не найден в корзине'},
-                status=status.HTTP_400_BAD_REQUEST
             )
+            .values("ingredient__name", "ingredient__measurement_unit")
+            .annotate(total_amount=Sum("amount"))
+        )
 
-        serializer = RecipeShopSerializer(shopping_cart.recipe,
-                                          context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        file_contents = [
+            f'{ingredient["ingredient__name"]} - {ingredient["total_amount"]}'
+            f'{ingredient["ingredient__measurement_unit"]}.'
+            for ingredient in ingredients
+        ]
+
+        file_content = "\n".join(file_contents)
+        file = HttpResponse(
+            "Список покупок:\n" + file_content,
+            content_type=CONTENT_TYPE
+        )
+        file["Content-Disposition"] = f"attachment; \
+            filename={settings.FILE_NAME}"
+
+        return file
