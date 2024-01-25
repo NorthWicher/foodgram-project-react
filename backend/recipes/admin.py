@@ -26,18 +26,21 @@ class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
 
 
-class IngredientAmountInline(admin.TabularInline):
+class IngredientAmountAdmin(admin.TabularInline):
     model = IngredientAmount
+    autocomplete_fields = ('ingredient', )
     extra = 1
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    inlines = (IngredientAmountAdmin,)
     list_display = (
         'id',
         'name',
         'author',
-        'pub_date'
+        'pub_date',
+        'text',
     )
     search_fields = (
         'author__username',
@@ -46,7 +49,9 @@ class RecipeAdmin(admin.ModelAdmin):
     )
     list_filter = (
         'tags',
-        'pub_date'
+        'pub_date',
+        'author',
+        'name',
     )
 
 
@@ -79,16 +84,28 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     )
     list_filter = ('recipe__tags',)
 
+    def favorited_count(self, obj):
+        return obj.favorite_recipes.count()
+
+    favorited_count.short_description = 'Favorited Count'
+
 
 @admin.register(Subscribe)
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'user',
+        'author',
     )
     search_fields = (
         'user__username',
         'user__email',
+        'user',
+    )
+    list_fields = (
+        'user__username',
+        'user__email',
+        'user',
     )
 
 
@@ -107,7 +124,7 @@ class UserAdmin(admin.ModelAdmin):
         'first_name',
         'last_name'
     )
-    list_filter = ('date_joined',)
+    list_filter = ('date_joined', 'email', 'first_name')
     empty_value_display = '-пусто-'
 
 
