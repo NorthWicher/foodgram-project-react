@@ -35,6 +35,6 @@ services:
     ports:
       - 8080:80
     volumes:
-      - static:/static/
-      - media:/media/
-      - ./nginx.conf:/etc/nginx/conf_d/default.conf
+      - static:/staticfiles/ 
+      - media:/app/media/
+      - .././nginx.conf:/etc/nginx/sites-enabled/default
