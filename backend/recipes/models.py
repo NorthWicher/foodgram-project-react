@@ -1,9 +1,7 @@
 from colorfield.fields import ColorField
 from django.core import validators
-from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, FileExtensionValidator
 from django.db import models
-from django.utils.translation import gettext as _
 from users.models import User
 from foodgram.settings import MIN_AMOUNT_MODEL, MIN_TIME_MODEL
 
@@ -71,15 +69,10 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         upload_to='recipes/',
-        blank=True,
-        verbose_name='Картинка рецепта',)
-
-    def save(self, *args, **kwargs):
-        if not self.image:
-            raise ValidationError(_('Поле изображения'
-                                    'обязательно для заполнения'))
-        super().save(*args, **kwargs)
-
+        verbose_name='Изображение рецепта',
+        help_text='Загрузите изображение рецепта',
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
+    )
     text = models.TextField(
         help_text='Введите текст рецепта',
         verbose_name='Описание рецепта',
