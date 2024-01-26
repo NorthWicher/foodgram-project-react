@@ -37,4 +37,4 @@ services:
     volumes:
       - static:/staticfiles/ 
       - media:/app/media/
-      - .././nginx.conf:/etc/nginx/sites-enabled/default
+      - ./nginx.conf:/etc/nginx/conf_d/default.conf
