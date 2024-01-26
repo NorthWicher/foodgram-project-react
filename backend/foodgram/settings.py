@@ -72,13 +72,6 @@ DATABASES = {
     }
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
-
 AUTH_USER_MODEL = 'users.User'
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -153,4 +146,5 @@ MAX_INGREDIENT_AMOUNT = 100
 DEFAULT_INGREDIENT_AMOUNT = 1
 MIN_AMOUNT_MODEL = 1
 MIN_TIME_MODEL = 1
-FILE_NAME = "shopping_cart.txt"
+FILE_NAME = 'shopping_cart.txt'
+CONTENT_TYPE = 'text/plain'

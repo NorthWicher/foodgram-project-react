@@ -3,6 +3,7 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils.translation import gettext as _
 from users.models import User
 from foodgram.settings import MIN_AMOUNT_MODEL, MIN_TIME_MODEL
 
@@ -75,8 +76,8 @@ class Recipe(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.image:
-            raise ValidationError('Поле изображения'
-                                  'обязательно для заполнения')
+            raise ValidationError(_('Поле изображения'
+                                    'обязательно для заполнения'))
         super().save(*args, **kwargs)
 
     text = models.TextField(

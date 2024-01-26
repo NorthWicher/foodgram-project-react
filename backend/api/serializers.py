@@ -151,7 +151,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, ingredients):
         if not ingredients:
             raise ValidationError('Необходимо ввести ингредиент')
-        attrs_data = [attr.get('id') for attr in ingredients]
+        attrs_data = (attr.get('id',) for attr in ingredients)
         if len(attrs_data) != len(set(attrs_data)):
             raise ValidationError(
                 'Ингредиенты для рецепта не должны повторяться')
@@ -163,7 +163,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def validate_tags(self, tags):
         if not tags:
             raise ValidationError('Необходимо ввести теги')
-        attrs_data = [attr.id for attr in tags]
+        attrs_data = (attr.id for attr in tags)
         if len(attrs_data) != len(set(attrs_data)):
             raise ValidationError(
                 'Теги для рецепта не должны повторяться'
@@ -300,7 +300,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return Recipe.objects.filter(author=obj).count()
 
     def get_is_subscribed(self, obj):
-        user = self.context['request'].user
+        user = self.context('request').user
         if user.is_anonymous:
             return False
         return Subscribe.objects.filter(user=user, author=obj).exists()
